@@ -1,0 +1,63 @@
+{
+  "positions": 150,
+  "profile": "colab-t4",
+  "systems": {
+    "baseline": {
+      "claim_precision": 0.4702,
+      "composite_score_mean": -2.8913,
+      "eval_exact": 1.0,
+      "eval_within_one": 1.0,
+      "fluency": {
+        "distinct_2": 0.9781,
+        "mean_tokens": 75.91,
+        "repetition_rate": 0.0933
+      },
+      "format_rate": 0.0133,
+      "hallucination_rate": 1.48,
+      "line_illegal_rate": 0.6667,
+      "mean_pv_match_plies": 0.11,
+      "responses": 150,
+      "verdict_exact": 0.2933,
+      "verdict_within_one": 0.9467,
+      "verified_pass_rate": 0.0
+    },
+    "dpo": {
+      "claim_precision": 0.5745,
+      "composite_score_mean": -1.3211,
+      "eval_exact": 0.48,
+      "eval_within_one": 0.8933,
+      "fluency": {
+        "distinct_2": 0.9996,
+        "mean_tokens": 36.92,
+        "repetition_rate": 0.0
+      },
+      "format_rate": 1.0,
+      "hallucination_rate": 1.7133,
+      "line_illegal_rate": 0.96,
+      "mean_pv_match_plies": 1.05,
+      "responses": 150,
+      "verdict_exact": 0.5,
+      "verdict_within_one": 0.7933,
+      "verified_pass_rate": 0.02
+    },
+    "sft": {
+      "claim_precision": 0.5721,
+      "composite_score_mean": -1.3601,
+      "eval_exact": 0.4533,
+      "eval_within_one": 0.9,
+      "fluency": {
+        "distinct_2": 0.995,
+        "mean_tokens": 34.71,
+        "repetition_rate": 0.0
+      },
+      "format_rate": 1.0,
+      "hallucination_rate": 1.76,
+      "line_illegal_rate": 0.9533,
+      "mean_pv_match_plies": 1.05,
+      "responses": 150,
+      "verdict_exact": 0.5,
+      "verdict_within_one": 0.7933,
+      "verified_pass_rate": 0.02
+    }
+  }
+}

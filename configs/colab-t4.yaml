@@ -1,0 +1,101 @@
+# Colab T4 profile.
+#
+# The real run. Sized for a free Colab T4 (16 GB VRAM, 2 vCPUs): QLoRA
+# fine-tuning of Qwen2.5-3B-Instruct in 4-bit, candidate generation for
+# the alignment stage, DPO, and the held-out evaluation. Each stage fits
+# comfortably inside a single free session, and the annotation stage
+# caches to disk so an interrupted session resumes where it stopped.
+#
+# Why Qwen2.5-3B-Instruct: on a 16 GB T4 the 4-bit weights take roughly
+# 2 GB, which leaves generous headroom for LoRA optimiser state and
+# activations at sequence length 768, so training is quick enough to
+# iterate on a free tier. A 7B model also fits in 4-bit but roughly
+# halves the training and generation speed for modest quality gains on
+# this narrow, structured task. See docs/design.md for the full
+# reasoning, including the licence note on this model.
+
+profile: colab-t4
+seed: 715
+
+paths:
+  data_dir: data
+  artefacts_dir: artefacts
+  results_dir: results
+
+engine:
+  path: null
+  depth: 14
+  multipv: 2
+  threads: 2
+  hash_mb: 256
+
+data:
+  pgn_url: "https://database.lichess.org/standard/lichess_db_standard_rated_2014-08.pgn.zst"
+  max_games_scanned: 400000
+  min_elo: 1800
+  max_elo: 2400
+  min_base_time_s: 180
+  min_ply: 8
+  max_ply: 24
+  max_positions_per_game: 2
+  max_unique_positions: 9000
+  max_cp_before: 800
+  splits:
+    train: 0.7
+    align: 0.2
+    eval: 0.1
+
+model:
+  base_id: "Qwen/Qwen2.5-3B-Instruct"
+  four_bit: true
+  max_seq_len: 768
+
+sft:
+  output_dir: artefacts/sft
+  epochs: 1
+  # Capped so the run finishes comfortably inside one free T4 session. At
+  # effective batch 16 this still sees ~3200 examples, which is plenty for the
+  # model to learn the four-line format and grounding; DPO does the rest.
+  max_steps: 200
+  save_steps: 50          # checkpoint to Drive so a reclaimed session resumes
+  per_device_batch: 4
+  grad_accum: 4
+  learning_rate: 1.0e-4
+  warmup_ratio: 0.03
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  logging_steps: 10
+
+generation:
+  # Candidate sampling is the slow part of alignment and writes its output in
+  # one go, so it is sized to finish comfortably inside a single free session.
+  # A spread of temperatures still surfaces both careful and careless answers,
+  # which is what the verifier needs to build good and bad preference pairs.
+  temperatures: [0.3, 0.6, 0.9, 1.1, 1.3]
+  top_p: 0.95
+  max_new_tokens: 170
+  batch_size: 8
+  max_positions: 180
+
+dpo:
+  output_dir: artefacts/dpo
+  beta: 0.1
+  epochs: 2
+  max_steps: -1
+  per_device_batch: 2
+  grad_accum: 4
+  learning_rate: 5.0e-6
+  logging_steps: 10
+  min_score_margin: 0.15
+
+evaluation:
+  systems: [baseline, sft, dpo]
+  max_positions: 150
+  max_new_tokens: 180
+  verdict_tolerance: 1
+  eval_band_tolerance: 1
+
+wandb:
+  project: opening-theory-engine
+  mode: auto

@@ -1,0 +1,157 @@
+"""Build the final training files from annotated positions.
+
+Splits are assigned at game level (every position from one game lands in
+the same split) so evaluation never sees near-duplicates of training
+positions from the same game. Output files:
+
+- ``positions_annotated.jsonl``: every position with its facts, motifs,
+  split and rendered target. The alignment and evaluation stages read this.
+- ``sft_train.jsonl``: prompt and completion pairs for the SFT trainer only.
+- ``dataset_card.md``: regenerated statistics about what is inside.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+import pandas as pd
+
+from opening_theory_engine.config import ProjectConfig, SplitsConfig
+from opening_theory_engine.data.motifs import MotifFlags
+from opening_theory_engine.data.prompts import build_prompt_messages
+from opening_theory_engine.data.templates import TemplateRenderer
+from opening_theory_engine.engine.facts import MoveFacts
+from opening_theory_engine.utils import get_logger, sha1_hex, write_jsonl
+
+_LOG = get_logger(__name__)
+
+
+@dataclass(frozen=True)
+class DatasetBundle:
+    """Paths and counts for one dataset build."""
+
+    positions_path: Path
+    sft_path: Path
+    card_path: Path
+    split_counts: dict[str, int]
+
+
+def assign_split(game_id: str, splits: SplitsConfig, seed: int) -> str:
+    """Deterministic game-level split assignment."""
+    bucket = int(sha1_hex(f"{seed}:{game_id}")[:8], 16) % 10_000
+    train_edge = int(splits.train * 10_000)
+    align_edge = train_edge + int(splits.align * 10_000)
+    if bucket < train_edge:
+        return "train"
+    if bucket < align_edge:
+        return "align"
+    return "eval"
+
+
+class DatasetBuilder:
+    """Cleans annotated rows and writes the training files."""
+
+    def __init__(self, config: ProjectConfig) -> None:
+        self._config = config
+        self._renderer = TemplateRenderer(seed=config.seed)
+
+    def build(self, annotated: pd.DataFrame) -> DatasetBundle:
+        frame = self._clean(annotated)
+        frame["split"] = [
+            assign_split(game_id, self._config.data.splits, self._config.seed)
+            for game_id in frame["game_id"]
+        ]
+        frame["target"] = [
+            self._renderer.render(
+                MoveFacts.from_dict(row["facts"]),
+                MotifFlags.from_dict(row["motifs"]),
+                row["opening"],
+            )
+            for row in frame.to_dict("records")
+        ]
+
+        processed = self._config.paths.processed_dir
+        positions_path = processed / "positions_annotated.jsonl"
+        sft_path = processed / "sft_train.jsonl"
+        card_path = processed / "dataset_card.md"
+
+        write_jsonl(positions_path, frame.to_dict("records"))
+        train_rows = frame[frame["split"] == "train"]
+        write_jsonl(sft_path, (self._sft_record(row) for row in train_rows.to_dict("records")))
+        card_path.parent.mkdir(parents=True, exist_ok=True)
+        card_path.write_text(self._card(frame), encoding="utf-8")
+
+        counts = frame["split"].value_counts().to_dict()
+        _LOG.info("dataset built: %s", counts)
+        return DatasetBundle(
+            positions_path=positions_path,
+            sft_path=sft_path,
+            card_path=card_path,
+            split_counts={str(key): int(value) for key, value in counts.items()},
+        )
+
+    def _clean(self, annotated: pd.DataFrame) -> pd.DataFrame:
+        frame = annotated.copy()
+        before = len(frame)
+        keep = [
+            abs(int(row["facts"]["cp_best_white"])) <= self._config.data.max_cp_before
+            for row in frame.to_dict("records")
+        ]
+        frame = frame[pd.Series(keep, index=frame.index)]
+        frame = frame[frame["opening"].astype(str).str.len() > 0]
+        frame = frame.sort_values(["game_id", "ply"]).reset_index(drop=True)
+        dropped = before - len(frame)
+        if dropped:
+            _LOG.info("dropped %d rows in cleaning (lopsided or malformed)", dropped)
+        if frame.empty:
+            raise RuntimeError("no rows survived cleaning")
+        return frame
+
+    def _sft_record(self, row: dict) -> dict:
+        return {
+            "prompt": build_prompt_messages(
+                opening=row["opening"],
+                eco=row["eco"],
+                fen_before=row["fen_before"],
+                move_san=row["move_san"],
+                turn_white=bool(row["turn_white"]),
+            ),
+            "completion": [{"role": "assistant", "content": row["target"]}],
+        }
+
+    def _card(self, frame: pd.DataFrame) -> str:
+        eco_counts = frame["eco"].str[0].value_counts().sort_index()
+        split_counts = frame["split"].value_counts()
+        verdicts = pd.Series(
+            [row["facts"]["cp_loss"] for row in frame.to_dict("records")]
+        ).describe()
+        lines = [
+            "# Dataset card",
+            "",
+            "Generated by `ote data build`. Numbers below describe the current",
+            "`positions_annotated.jsonl`, so regenerate this file whenever the",
+            "config changes.",
+            "",
+            f"- Unique positions: **{len(frame)}**",
+            f"- Games represented: **{frame['game_id'].nunique()}**",
+            f"- Rating band: {frame['white_elo'].min()} to {frame['white_elo'].max()} "
+            "(both players inside the configured band)",
+            f"- Ply window: {frame['ply'].min()} to {frame['ply'].max()}",
+            "",
+            "## Split sizes",
+            "",
+        ]
+        lines += [f"- {name}: {count}" for name, count in split_counts.items()]
+        lines += ["", "## ECO family coverage", ""]
+        lines += [f"- {family}: {count}" for family, count in eco_counts.items()]
+        lines += [
+            "",
+            "## Centipawn loss of played moves",
+            "",
+            "```text",
+            str(verdicts),
+            "```",
+            "",
+        ]
+        return "\n".join(lines)

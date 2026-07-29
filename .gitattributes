@@ -1,0 +1,3 @@
+* text=auto
+*.pgn text eol=lf
+*.ipynb text eol=lf

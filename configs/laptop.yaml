@@ -1,0 +1,86 @@
+# Laptop profile.
+#
+# Proves the whole pipeline end to end on a CPU-only machine in a few
+# minutes: a small real slice of the Lichess database, shallow but genuine
+# Stockfish analysis, and a tiny instruction model so the training code
+# paths run for a handful of optimiser steps. Quality is not the goal
+# here; the goal is that every stage runs, cheaply, on modest hardware.
+# The real run uses configs/colab-t4.yaml.
+
+profile: laptop
+seed: 715
+
+paths:
+  data_dir: data
+  artefacts_dir: artefacts
+  results_dir: results
+
+engine:
+  path: null            # falls back to the STOCKFISH_PATH environment variable
+  depth: 10
+  multipv: 2
+  threads: 1
+  hash_mb: 64
+
+data:
+  pgn_url: "https://database.lichess.org/standard/lichess_db_standard_rated_2013-01.pgn.zst"
+  max_games_scanned: 12000
+  min_elo: 1800
+  max_elo: 2400
+  min_base_time_s: 180
+  min_ply: 8
+  max_ply: 24
+  max_positions_per_game: 2
+  max_unique_positions: 220
+  max_cp_before: 800
+  splits:
+    train: 0.7
+    align: 0.2
+    eval: 0.1
+
+model:
+  base_id: "HuggingFaceTB/SmolLM2-135M-Instruct"
+  four_bit: false
+  max_seq_len: 512
+
+sft:
+  output_dir: artefacts/sft
+  epochs: 1
+  max_steps: 3
+  per_device_batch: 1
+  grad_accum: 1
+  learning_rate: 2.0e-4
+  warmup_ratio: 0.03
+  lora_r: 8
+  lora_alpha: 16
+  lora_dropout: 0.05
+  logging_steps: 1
+
+generation:
+  temperatures: [0.2, 0.7, 1.0, 1.2]
+  top_p: 0.95
+  max_new_tokens: 160
+  batch_size: 2
+  max_positions: 6
+
+dpo:
+  output_dir: artefacts/dpo
+  beta: 0.1
+  epochs: 1
+  max_steps: 3
+  per_device_batch: 1
+  grad_accum: 1
+  learning_rate: 5.0e-6
+  logging_steps: 1
+  min_score_margin: 0.15
+
+evaluation:
+  systems: [baseline, sft, dpo]
+  max_positions: 6
+  max_new_tokens: 160
+  verdict_tolerance: 1
+  eval_band_tolerance: 1
+
+wandb:
+  project: opening-theory-engine
+  mode: disabled
