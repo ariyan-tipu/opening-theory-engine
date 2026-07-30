@@ -6,18 +6,30 @@
 A chess engine tells you the best move but never why. A general chatbot happily
 tells you why, and is regularly wrong about it in ways that sound convincing.
 This project sits in the gap: a small fine-tuned language model that explains
-chess opening moves, where **every stage of training and serving is checked
-against Stockfish ground truth** rather than against anyone's opinion.
+chess opening moves, with **an evaluation harness that checks what it says
+against Stockfish** at a fixed depth rather than against anyone's opinion.
 
-The part I care most about: the preference data for alignment (DPO) is built
-from **objective engine evidence**. Candidate explanations are sampled at
-several temperatures, a deterministic parser extracts each factual claim
-("this wins a pawn", "better was d4", the quoted engine line), and every claim
-is checked against Stockfish's actual evaluation, principal variation and
-material arithmetic. The answer the engine evidence most supports becomes the
-chosen side of a DPO pair, and a weaker or hallucinated one the rejected side,
-never preferring an answer that makes more factual errors than its partner. No
-human labels anywhere in the loop.
+The harness is the result. After QLoRA fine-tuning and DPO alignment, **only 2%
+of responses survive end-to-end verification**, and the tuned models quote an
+illegal move in about 95% of their engine lines. That is the kind of confident,
+plausible-sounding failure a subjective rating misses, and it is the number this
+repository leads with.
+
+The alignment data is built the same way, from **engine evidence with no human
+labels**. Candidate explanations are sampled at several temperatures, a
+deterministic parser extracts each factual claim ("this wins a pawn", "better
+was d4", the quoted engine line), and each claim the parser recognises is
+checked against Stockfish's evaluation, principal variation and material
+arithmetic. The answer that evidence most supports becomes the chosen side of a
+DPO pair and a weaker or hallucinated one the rejected side, never preferring an
+answer that makes more factual errors than its partner.
+
+Two scope notes worth having up front. The reference is a finite-depth engine
+search (depth 14 in the run below, 10 in the laptop profile), so it is a strong
+reference rather than literal truth. And only claims the parser recognises can
+be checked: a sentence it cannot parse is not verified, it is simply absent from
+the count, which is why the parser's coverage is part of the method rather than
+an implementation detail.
 
 ## How it works
 
@@ -31,7 +43,7 @@ flowchart TD
     C --> G[Claim parser + verifier]
     F --> G
     G --> H[JAX jit/vmap batch scorer]
-    H --> I[Preference pairs from\nengine ground truth]
+    H --> I[Preference pairs from\nengine reference checks]
     I --> J[DPO via trl]
     J --> K[Held-out evaluation:\nbaseline vs SFT vs DPO]
     J --> L[FastAPI serving]
@@ -95,18 +107,14 @@ What the numbers say:
   reward-accuracy curve did climb cleanly to 0.84, which says the objective
   was learnable; it does not say the generation got better.
 - **The three rows the baseline wins all carry a denominator caveat.** Verdict
-  and evaluation distances exist only where the field can be parsed from the
-  response, so those rates score the baseline on just the responses where it
-  committed to something parseable; a perfect eval column from a model that
-  produces the structured format 1% of the time signals how small that slice
-  is. The tuned models commit on all 150 positions and aim for the exact
-  verdict, so exact matches nearly double at the cost of being further off
-  when wrong. The hallucination count is the same effect in a different
-  guise: it counts claims the parser could extract and the engine could then
-  refute, and a model that rarely emits the structured format rarely offers
-  the parser anything to refute. Vagueness scores well on that metric, which
-  is precisely why it is not the headline one.
-  [docs/results.md](docs/results.md) walks through this.
+  and evaluation distances only exist where the field can be parsed, so those
+  rates score the baseline on the sliver of responses where it committed to
+  something parseable: a perfect eval column from a model that produces the
+  format 1% of the time says how small that sliver is. Hallucinations per
+  response is the same effect in another guise, since a model that rarely
+  emits the format rarely offers the parser anything to refute. Vagueness
+  scores well on both, which is why neither is the headline.
+  [docs/results.md](docs/results.md) works through it.
 - **The clearest limitation the verifier exposes:** the fine-tuned models quote
   an illegal move somewhere in their engine line about 95% of the time. A
   lightly tuned 3B model can learn the format and get the verdict right, but
