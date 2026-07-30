@@ -4,7 +4,7 @@ The chosen side must be factually clean (well formed, zero incorrect
 claims), the rejected side is the worst-scoring candidate for the same
 position, and a minimum score margin filters out pairs where the
 preference would mostly be noise. No human labels anywhere: the
-preference signal is entirely engine ground truth.
+preference signal comes entirely from engine reference checks.
 """
 
 from __future__ import annotations

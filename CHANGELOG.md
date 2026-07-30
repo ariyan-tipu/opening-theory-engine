@@ -18,7 +18,7 @@ Initial release.
 - Training: QLoRA supervised fine-tuning and DPO via transformers, peft and
   trl, with Weights & Biases tracking wired into both stages.
 - Alignment: deterministic claim parser and verifier, JAX jit/vmap batch
-  scorer, preference pairs built from engine ground truth.
+  scorer, preference pairs built from engine reference checks.
 - Agent loop: explainer proposes, verifier checks, one bounded regeneration
   on failed verification.
 - Serving: FastAPI app with stub and real backends, full verification

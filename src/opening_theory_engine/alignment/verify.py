@@ -1,4 +1,4 @@
-"""Check parsed claims against engine ground truth.
+"""Check parsed claims against the engine reference.
 
 This verifier is deterministic on purpose. Given the same explanation and
 the same engine facts it always returns the same report, which makes it

@@ -124,7 +124,7 @@ non-event.
 ## Engine settings and evaluation noise
 
 Annotation runs at depth 14 with MultiPV 2 on the hosted profile. Deeper
-search would tighten the ground truth but multiplies annotation time, and
+search would tighten the reference but multiplies annotation time, and
 opening positions are exactly where shallow-to-medium Stockfish is already
 strong. Residual search noise is absorbed by working in bands: verdicts and
 evaluations are checked at band level with a one-band tolerance, not at

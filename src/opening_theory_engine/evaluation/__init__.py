@@ -1,1 +1,1 @@
-"""Held-out evaluation: baseline versus SFT versus DPO, against ground truth."""
+"""Held-out evaluation: baseline versus SFT versus DPO, against the engine reference."""

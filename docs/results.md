@@ -81,7 +81,7 @@ itself.
 DPO, claim precision rises (0.5721 to 0.5745), hallucinations per response fall
 (1.76 to 1.71), and the composite score improves (-1.360 to -1.321). These are
 the quantities the preference pairs were built from, and they all move the
-right way, driven only by engine ground truth with no human labels. The gain is
+right way, driven only by engine reference checks with no human labels. The gain is
 deliberately modest: this was a short free-tier run (200 SFT steps, 46 DPO
 steps). The point is that the direction is correct and measurable, and the
 reward curve during training climbed cleanly, so more compute is expected to

@@ -1,4 +1,4 @@
-"""Alignment against engine ground truth.
+"""Alignment against engine reference checks.
 
 The pieces here turn "the engine said X, the model said Y" into training
 signal: parse the claims a generated explanation makes, check each claim

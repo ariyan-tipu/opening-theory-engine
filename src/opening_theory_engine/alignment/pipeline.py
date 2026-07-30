@@ -1,4 +1,4 @@
-"""Score sampled candidates against ground truth and build DPO pairs.
+"""Score sampled candidates against the engine reference and build DPO pairs.
 
 This stage is pure CPU work: parse each candidate's claims, verify them
 against the stored engine facts, score everything in one JAX pass, then

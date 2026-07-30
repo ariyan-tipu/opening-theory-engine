@@ -30,7 +30,7 @@ _LOG = get_logger("ote")
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ote",
-        description="Chess opening explanations, verified against engine ground truth.",
+        description="Chess opening explanations, checked against an engine reference.",
     )
     parser.add_argument("--version", action="version", version=f"ote {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
