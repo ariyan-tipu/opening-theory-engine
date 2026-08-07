@@ -6,10 +6,10 @@
 A chess engine tells you the best move but never why. A general chatbot happily
 tells you why, and is regularly wrong about it in ways that sound convincing.
 This project sits in the gap: a small fine-tuned language model that explains
-chess opening moves, with **an evaluation harness that checks what it says
+chess opening moves, with **an evaluation suite that checks what it says
 against Stockfish** at a fixed depth rather than against anyone's opinion.
 
-The harness is the result. After QLoRA fine-tuning and DPO alignment, **only 2%
+That suite is the result. After QLoRA fine-tuning and DPO alignment, **only 2%
 of responses survive end-to-end verification**, and the tuned models quote an
 illegal move in about 95% of their engine lines. That is the kind of confident,
 plausible-sounding failure a subjective rating misses, and it is the number this
@@ -120,7 +120,7 @@ What the numbers say:
   lightly tuned 3B model can learn the format and get the verdict right, but
   reliably generating a fully legal multi-move continuation is beyond it. This
   is exactly the kind of confident, plausible-sounding hallucination that
-  subjective rating misses and that this project's verification harness catches.
+  subjective rating misses and that this project's verifier catches.
 
 Full numbers are in [results/summary.md](results/summary.md) and
 [results/summary.json](results/summary.json), the dataset behind them is
