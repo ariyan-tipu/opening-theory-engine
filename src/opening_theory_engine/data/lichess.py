@@ -1,7 +1,7 @@
 """Streamed access to the Lichess open database.
 
 The monthly exports are zstandard-compressed PGN, sometimes tens of
-gigabytes once unpacked. Nothing here ever decompresses a file to disk or
+gigabytes uncompressed. Nothing here ever decompresses a file to disk or
 holds more than one game in memory: games stream straight out of the
 compressed file and a hard cap bounds how many are scanned.
 """

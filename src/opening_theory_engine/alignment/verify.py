@@ -3,7 +3,7 @@
 This verifier is deterministic on purpose. Given the same explanation and
 the same engine facts it always returns the same report, which makes it
 usable in three places with identical behaviour: building DPO preference
-pairs, the held-out evaluation, and the live serving loop that flags
+pairs, the held-out evaluation and the live serving loop that flags
 hallucinated claims before a response goes out.
 """
 
@@ -34,7 +34,7 @@ class CheckOutcome(StrEnum):
 
 @dataclass(frozen=True)
 class ClaimCheck:
-    """One claim, what we expected, what the model said, and the outcome."""
+    """One claim, what we expected, what the model said and the outcome."""
 
     label: str
     outcome: CheckOutcome

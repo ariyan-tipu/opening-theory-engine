@@ -2,7 +2,7 @@
 #
 # The real run. Sized for a free Colab T4 (16 GB VRAM, 2 vCPUs): QLoRA
 # fine-tuning of Qwen2.5-3B-Instruct in 4-bit, candidate generation for
-# the alignment stage, DPO, and the held-out evaluation. Each stage fits
+# the alignment stage, DPO and the held-out evaluation. Each stage fits
 # comfortably inside a single free session, and the annotation stage
 # caches to disk so an interrupted session resumes where it stopped.
 #

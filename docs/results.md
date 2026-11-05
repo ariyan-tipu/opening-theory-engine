@@ -122,7 +122,7 @@ Notebook 04 also runs the real FastAPI service against the DPO adapter and
 Stockfish 18. A `/explain` request for `1. e4` returned a verified explanation
 (`"passed": true`, factual accuracy 1.0) whose quoted line was legal and
 matched the engine, with the full evidence trail attached. That is proof the
-serving path works end to end with real weights, not just the stub used in CI.
+serving path works end to end with real weights as well as with the stub used in CI.
 
 ## What I would do with more compute
 

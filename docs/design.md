@@ -53,7 +53,7 @@ a rendered target, parsed back and verified, contains zero incorrect claims.
 The cost is a ceiling on prose variety, and I accept it: SFT teaches
 format and grounding, then the alignment stage optimises factual accuracy
 under sampling, which is where the model's own failure modes get corrected.
-Fluency is reported through transparent proxies, not overclaimed.
+Fluency is reported through transparent proxies and nothing stronger.
 
 ## Why DPO, and why not PPO or an LLM judge
 
@@ -77,7 +77,7 @@ builder is deliberately conservative:
   things, because correct claims add score.
 - Pairs need a minimum score margin; near-ties are noise and are dropped.
 - The scorer only feeds training through pairs. The reported results come
-  from the held-out split, which no stage trains on, and game-level split
+  from the held-out split, which no stage trains on. Game-level split
   assignment stops near-duplicate positions leaking across splits.
 - The verifier is versioned in the repository; if its rules change, the
   numbers regenerate.
@@ -91,7 +91,7 @@ rule is written once as scalar code and vmap lifts it across the batch.
 
 The caveat: at this project's scale NumPy would cope fine, and the
 tests use a NumPy mirror as the oracle. JAX is here because the pattern is
-right, the intent is clearer, and the identical function runs on an
+right, the intent is clearer and the identical function runs on an
 accelerator when the batch grows. It is deliberately not forced into the
 training loop, where the Hugging Face and PyTorch stack is the correct tool.
 

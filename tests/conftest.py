@@ -1,4 +1,4 @@
-"""Shared fixtures: stub engine, synthetic facts, and a tiny test profile."""
+"""Shared fixtures: stub engine, synthetic facts and a tiny test profile."""
 
 from __future__ import annotations
 

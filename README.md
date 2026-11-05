@@ -27,8 +27,8 @@ answer that makes more factual errors than its partner.
 Two scope notes worth having up front. The reference is a finite-depth engine
 search (depth 14 in the run below, 10 in the laptop profile), so it is a strong
 reference rather than literal truth. And only claims the parser recognises can
-be checked: a sentence it cannot parse is not verified, it is simply absent from
-the count, which is why the parser's coverage is part of the method rather than
+be checked: a sentence it cannot parse is left out of the count altogether,
+which is why the parser's coverage is part of the method rather than
 an implementation detail.
 
 ## How it works
@@ -64,7 +64,7 @@ thing:
 The evaluation compares the plain instruct model, the SFT adapter and the DPO
 adapter on 150 held-out positions no training stage has seen, with greedy
 decoding and identical prompts. Every metric is an engine-checked count from
-the same deterministic verifier, not a subjective rating. The run was trained
+the same deterministic verifier. The run was trained
 on a free Colab T4; the loss and reward curves are on
 [Weights & Biases](https://wandb.ai/ariyantipu39-city-university-of-london/opening-theory-engine).
 
@@ -168,7 +168,7 @@ Interactive docs live at `http://127.0.0.1:8000/docs`.
 Training runs on a free Colab T4; the code is not Colab-specific and the same
 commands run unchanged on any CUDA box (an AWS EC2 `g4dn.xlarge` carries the
 same T4 if you would rather rent). Each notebook is thin: it clones this
-repository, installs it, and drives the CLI. The working directory sits on
+repository, installs it and drives the CLI. The working directory sits on
 Google Drive, so the annotation cache and adapters survive session recycling
 and every stage resumes rather than restarts.
 
@@ -216,7 +216,7 @@ docker run --rm -p 8000:8000 opening-theory-engine
 ```
 
 Every `/explain` response carries the full evidence trail: the engine's best
-move and line, the parsed claims, each claim's verdict, and how many attempts
+move and line, the parsed claims, each claim's verdict and how many attempts
 the explainer needed. Throughput note: inference is plain Hugging Face
 `generate()` behind a request lock, which is entirely adequate for a solo
 project at this scale; the considered next step for real traffic is vLLM with

@@ -29,7 +29,7 @@ Initial release.
   smoke test, and a Docker build that boots the container and hits the API.
 - Executed the full pipeline on a free Colab T4 and committed the measured
   results: an 8,993-position dataset, a 200-step QLoRA SFT run, 180
-  engine-verified preference pairs, DPO, and a held-out evaluation of all
+  engine-verified preference pairs, DPO and a held-out evaluation of all
   three systems (see `results/` and the README table).
 - Hardened training for real hardware along the way: float16 on Turing GPUs,
   no mixed-precision scaler on the 4-bit path, a CPU-pinned JAX scorer,

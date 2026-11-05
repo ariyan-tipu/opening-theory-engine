@@ -8,7 +8,7 @@ from opening_theory_engine import __version__
 
 
 class ExplainRequest(BaseModel):
-    """A position, the move that was played, and optional opening context.
+    """A position, the move that was played and optional opening context.
 
     Every field is length-bounded. python-chess rejects anything malformed
     anyway, but it only gets to say so after the whole body has been parsed

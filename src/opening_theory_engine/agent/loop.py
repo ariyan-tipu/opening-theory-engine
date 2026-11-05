@@ -1,4 +1,4 @@
-"""Explain, verify, and regenerate once if the facts do not hold up.
+"""Explain, verify and regenerate once if the facts do not hold up.
 
 Two components with one clear job each: the explainer proposes text, the
 verifier checks every claim against the engine. If a response fails
